@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 WORKDIR /
+
+# Install build dependencies first (needed for pynini compilation)
+RUN pip install Cython wheel setuptools
+
 COPY requirements.txt /requirements.txt
 RUN pip install -r requirements.txt
 
