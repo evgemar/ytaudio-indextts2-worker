@@ -84,3 +84,4 @@ The IndexTTS-2 provider automatically:
 - Cold start: ~10-15 seconds (model preloaded)
 - Synthesis: ~2-5 seconds per segment
 - Duration control: Precise timing without pitch distortion
+
