@@ -1,0 +1,15 @@
+# IndexTTS-2 dependencies
+git+https://github.com/index-tts/index-tts@main
+librosa
+huggingface_hub
+safetensors
+transformers
+torch
+torchaudio
+torchvision
+einops
+yt_dlp
+ffmpeg-python
+omegaconf
+hydra-core
+runpod>=1.7.7
