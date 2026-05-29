@@ -99,13 +99,16 @@ def synthesize_tts(
 
     try:
         # IndexTTS-2 uses .infer() not .synthesize(); writes to output_path; reference must be a file
-        import tempfile, os, soundfile
+        import tempfile, os
         with tempfile.TemporaryDirectory() as td:
             out_path = os.path.join(td, "gen.wav")
             ref_path = os.path.join(td, "ref.wav")
             if isinstance(reference_audio, tuple):
                 ref_audio, ref_sr = reference_audio
-                soundfile.write(ref_path, ref_audio, ref_sr)
+                # ref_audio is a torch.Tensor shaped (channels, samples) from torchaudio.load
+                if ref_audio.dim() == 1:
+                    ref_audio = ref_audio.unsqueeze(0)
+                torchaudio.save(ref_path, ref_audio, ref_sr, format="wav")
             elif isinstance(reference_audio, str):
                 ref_path = reference_audio  # already a path
             else:
@@ -116,8 +119,8 @@ def synthesize_tts(
                 output_path=out_path,
                 verbose=False,
             )
-            audio, sr = soundfile.read(out_path, dtype="float32")
-            return audio, sr
+            audio_t, sr = torchaudio.load(out_path)
+            return audio_t, sr
 
     except Exception as e:
         print(f"Synthesis failed: {e}")
