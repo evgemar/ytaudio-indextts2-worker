@@ -12,11 +12,10 @@ Verified IndexTTS2.infer() signature (indextts.infer_v2.IndexTTS2):
           **generation_kwargs)
 
 Notes:
-  - There is NO native duration-control argument in this IndexTTS-2 release.
+  - Native duration control is implemented via `target_duration` in generation_kwargs.
     `interval_silence` only controls between-segment silence in ms.
-    `target_duration_seconds` from job_input is accepted for forward
-    compatibility and echoed in metadata but is NOT passed to .infer();
-    callers must continue to handle duration matching (e.g. ffmpeg atempo).
+    `target_duration_seconds` from job_input is now passed to .infer() as
+    `target_duration` for native duration matching.
   - Backward compatible: if no emotion reference is provided, behaves
     exactly as before (timbre-only via spk_audio_prompt).
 """
@@ -123,8 +122,8 @@ def synthesize_tts(
       (emo_audio_prompt). When None, infer() will use the speaker prompt's
       emotion as before.
     - emo_alpha: emotion blending strength (0..1+), default 1.0
-    - target_duration_seconds: not natively supported by this IndexTTS-2
-      release; caller must apply post-processing duration matching.
+    - target_duration_seconds: natively supported via target_duration parameter
+      passed to model.infer() for precise duration control.
 
     Returns:
         tuple: (audio_tensor, sample_rate)
@@ -155,6 +154,10 @@ def synthesize_tts(
             if emo_path is not None:
                 infer_kwargs["emo_audio_prompt"] = emo_path
                 infer_kwargs["emo_alpha"] = float(emo_alpha)
+
+            # Wire target_duration_seconds for native duration control
+            if target_duration_seconds is not None:
+                infer_kwargs["target_duration"] = float(target_duration_seconds)
 
             model.infer(**infer_kwargs)
             audio_t, sr = torchaudio.load(out_path)
@@ -259,7 +262,7 @@ def handler(job):
                 "speed": speed,
                 "emo_alpha": emo_alpha,
                 "used_emotion_reference": emotion_reference_audio is not None,
-                "duration_control_supported": False,
+                "duration_control_supported": True,
                 "supported_languages": SUPPORTED_LANGUAGES,
             },
         }
