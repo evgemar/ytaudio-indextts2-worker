@@ -2,6 +2,8 @@
 Cython
 setuptools
 wheel
+# Required for BigVGAN custom CUDA kernel JIT-compile (otherwise falls back to slow torch)
+ninja
 # IndexTTS-2 dependencies
 git+https://github.com/index-tts/index-tts@main
 librosa
@@ -17,3 +19,4 @@ ffmpeg-python
 omegaconf
 hydra-core
 runpod>=1.7.7
+soundfile

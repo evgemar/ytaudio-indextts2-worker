@@ -98,25 +98,26 @@ def synthesize_tts(
         language = "en"
 
     try:
-        # Synthesize with IndexTTS-2
-        result = model.synthesize(
-            text=text,
-            language=language,
-            reference_audio=reference_audio,
-            target_duration=target_duration_seconds,
-            temperature=temperature,
-            speed=speed
-        )
-
-        # Extract audio tensor and sample rate
-        if isinstance(result, dict):
-            audio = result.get('audio')
-            sr = result.get('sample_rate', 24000)
-        else:
-            audio = result
-            sr = 24000  # Default sample rate
-
-        return audio, sr
+        # IndexTTS-2 uses .infer() not .synthesize(); writes to output_path; reference must be a file
+        import tempfile, os, soundfile
+        with tempfile.TemporaryDirectory() as td:
+            out_path = os.path.join(td, "gen.wav")
+            ref_path = os.path.join(td, "ref.wav")
+            if isinstance(reference_audio, tuple):
+                ref_audio, ref_sr = reference_audio
+                soundfile.write(ref_path, ref_audio, ref_sr)
+            elif isinstance(reference_audio, str):
+                ref_path = reference_audio  # already a path
+            else:
+                raise RuntimeError("reference_audio missing or wrong type")
+            model.infer(
+                spk_audio_prompt=ref_path,
+                text=text,
+                output_path=out_path,
+                verbose=False,
+            )
+            audio, sr = soundfile.read(out_path, dtype="float32")
+            return audio, sr
 
     except Exception as e:
         print(f"Synthesis failed: {e}")
