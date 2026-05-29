@@ -12,10 +12,16 @@ Verified IndexTTS2.infer() signature (indextts.infer_v2.IndexTTS2):
           **generation_kwargs)
 
 Notes:
-  - Native duration control is implemented via `target_duration` in generation_kwargs.
+  - There is NO native duration-control argument in this IndexTTS-2 release.
     `interval_silence` only controls between-segment silence in ms.
-    `target_duration_seconds` from job_input is now passed to .infer() as
-    `target_duration` for native duration matching.
+    We previously tried forwarding `target_duration` via **generation_kwargs;
+    HuggingFace `model.generate()` rejects it hard with:
+      "The following model_kwargs are not used by the model:
+       ['target_duration']"
+    (verified 2026-05-29 on image 6a6df2772). Duration matching is therefore
+    a caller responsibility (ffmpeg atempo). `target_duration_seconds` is
+    accepted from job_input and echoed in metadata for forward compatibility
+    only — it is NOT forwarded to .infer().
   - Backward compatible: if no emotion reference is provided, behaves
     exactly as before (timbre-only via spk_audio_prompt).
 """
@@ -155,9 +161,13 @@ def synthesize_tts(
                 infer_kwargs["emo_audio_prompt"] = emo_path
                 infer_kwargs["emo_alpha"] = float(emo_alpha)
 
-            # Wire target_duration_seconds for native duration control
-            if target_duration_seconds is not None:
-                infer_kwargs["target_duration"] = float(target_duration_seconds)
+            # NOTE: do NOT pass target_duration into .infer() — IndexTTS-2
+            # forwards **generation_kwargs into HuggingFace model.generate(),
+            # which raises on unknown kwargs:
+            #   "The following model_kwargs are not used by the model:
+            #    ['target_duration']"
+            # Verified 2026-05-29 (both spk-only and spk+emo jobs failed).
+            # Duration matching stays a caller responsibility (ffmpeg atempo).
 
             model.infer(**infer_kwargs)
             audio_t, sr = torchaudio.load(out_path)
