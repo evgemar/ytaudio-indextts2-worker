@@ -272,7 +272,7 @@ def handler(job):
                 "speed": speed,
                 "emo_alpha": emo_alpha,
                 "used_emotion_reference": emotion_reference_audio is not None,
-                "duration_control_supported": True,
+                "duration_control_supported": False,
                 "supported_languages": SUPPORTED_LANGUAGES,
             },
         }
