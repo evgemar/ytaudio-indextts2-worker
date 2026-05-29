@@ -38,10 +38,11 @@ def initialize_model():
         print("Initializing IndexTTS2 model...")
         try:
             MODEL = IndexTTS2(
-                model_path="IndexTeam/IndexTTS-2",
-                device="cuda" if torch.cuda.is_available() else "cpu"
+                cfg_path="/app/checkpoints/config.yaml",
+                model_dir="/app/checkpoints",
+                use_fp16=torch.cuda.is_available(),
             )
-            print(f"IndexTTS2 initialized on {MODEL.device}")
+            print(f"IndexTTS2 initialized")
         except Exception as e:
             print(f"Failed to initialize IndexTTS2: {e}")
             raise
